@@ -7,6 +7,10 @@ import pandas as pd
 from fuzzywuzzy import fuzz
 
 
+import os
+import subprocess
+import pypandoc
+
 def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
     if output_dir is None:
         output_dir = os.path.dirname(docx_path) or "."
@@ -14,7 +18,7 @@ def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
     pdf_filename = os.path.splitext(os.path.basename(docx_path))[0] + ".pdf"
     pdf_path = os.path.join(output_dir, pdf_filename)
     
-    # First attempt: try using "soffice"
+    # Attempt conversion using LibreOffice (try soffice then libreoffice)
     command = [
         "soffice",
         "--headless",
@@ -27,9 +31,9 @@ def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
         if os.path.exists(pdf_path):
             return pdf_path
         else:
-            print("LibreOffice (soffice) command ran but PDF not found.")
-    except FileNotFoundError:
-        print("Command 'soffice' not found; trying 'libreoffice'...")
+            print("LibreOffice (soffice) ran but PDF not found.")
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        print("LibreOffice command (soffice) failed; trying 'libreoffice'...")
         command = [
             "libreoffice",
             "--headless",
@@ -42,26 +46,23 @@ def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
             if os.path.exists(pdf_path):
                 return pdf_path
             else:
-                print("LibreOffice command ran but PDF not found.")
-        except FileNotFoundError:
-            print("Command 'libreoffice' not found.")
-        except subprocess.CalledProcessError as e:
+                print("LibreOffice ran but PDF not found.")
+        except (FileNotFoundError, subprocess.CalledProcessError) as e:
             print("LibreOffice conversion failed:", e)
-    except subprocess.CalledProcessError as e:
-        print("LibreOffice conversion failed:", e)
     
-    # Fallback: try using pandoc
-    print("Attempting conversion with pandoc...")
-    command = ["pandoc", docx_path, "-o", pdf_path]
+    # Fallback: Use pypandoc (which can download pandoc if not installed)
+    print("Attempting conversion with pypandoc fallback...")
     try:
-        subprocess.run(command, check=True)
+        # Download pandoc if necessary. pypandoc will download it if not found.
+        pypandoc.download_pandoc()
+        output = pypandoc.convert_file(docx_path, 'pdf', outputfile=pdf_path)
         if os.path.exists(pdf_path):
-            print("Pandoc conversion succeeded.")
+            print("pypandoc conversion succeeded.")
             return pdf_path
         else:
-            raise FileNotFoundError("Pandoc conversion did not produce PDF.")
+            raise FileNotFoundError("pypandoc conversion did not produce a PDF.")
     except Exception as e:
-        print("Pandoc conversion failed:", e)
+        print("pypandoc conversion failed:", e)
         raise e
 
 

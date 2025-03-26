@@ -2,5 +2,5 @@ libfreetype6-dev
 libpng-dev
 pkg-config
 libjpeg-dev
-pandoc
+libreoffice
 texlive-xetex

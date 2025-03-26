@@ -13,3 +13,4 @@ python-Levenshtein==0.20.4
 PyMuPDF==1.22.5
 pdfminer.six==20221105
 numpy==1.23.5
+pypandoc==1.8.1
