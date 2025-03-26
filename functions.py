@@ -11,7 +11,10 @@ def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
     if output_dir is None:
         output_dir = os.path.dirname(docx_path) or "."
     
-    # Try using "soffice"
+    pdf_filename = os.path.splitext(os.path.basename(docx_path))[0] + ".pdf"
+    pdf_path = os.path.join(output_dir, pdf_filename)
+    
+    # First attempt: try using "soffice"
     command = [
         "soffice",
         "--headless",
@@ -21,6 +24,10 @@ def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
     ]
     try:
         subprocess.run(command, check=True)
+        if os.path.exists(pdf_path):
+            return pdf_path
+        else:
+            print("LibreOffice (soffice) command ran but PDF not found.")
     except FileNotFoundError:
         print("Command 'soffice' not found; trying 'libreoffice'...")
         command = [
@@ -30,12 +37,32 @@ def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
             docx_path,
             "--outdir", output_dir
         ]
+        try:
+            subprocess.run(command, check=True)
+            if os.path.exists(pdf_path):
+                return pdf_path
+            else:
+                print("LibreOffice command ran but PDF not found.")
+        except FileNotFoundError:
+            print("Command 'libreoffice' not found.")
+        except subprocess.CalledProcessError as e:
+            print("LibreOffice conversion failed:", e)
+    except subprocess.CalledProcessError as e:
+        print("LibreOffice conversion failed:", e)
+    
+    # Fallback: try using pandoc
+    print("Attempting conversion with pandoc...")
+    command = ["pandoc", docx_path, "-o", pdf_path]
+    try:
         subprocess.run(command, check=True)
-    pdf_path = os.path.join(output_dir, os.path.splitext(os.path.basename(docx_path))[0] + ".pdf")
-    return pdf_path
-
-
-
+        if os.path.exists(pdf_path):
+            print("Pandoc conversion succeeded.")
+            return pdf_path
+        else:
+            raise FileNotFoundError("Pandoc conversion did not produce PDF.")
+    except Exception as e:
+        print("Pandoc conversion failed:", e)
+        raise e
 
 
 
