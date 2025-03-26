@@ -636,53 +636,53 @@ from docxtpl import DocxTemplate
 import subprocess
 
 
-def generate_cover_pdf(participant_name=None,
-    date=None,
-    cohort=None,
-    output_folder="."):
+def generate_cover_pdf(participant_name, date, cohort, output_folder="."):
     """
     Generates a customized cover page PDF using a DOCX cover template.
 
     Parameters:
-      participant_name: The full name of the participant.
-      term: The term (e.g., "Winter 2025").
-      cohort: The cohort name.
-      output_folder: Folder to save the generated files.
+      participant_name (str): The participant's name.
+      date (str): The term/date.
+      cohort (str): The cohort identifier.
+      output_folder (str): The folder where files will be saved.
 
     Returns:
-      The file path to the generated cover PDF.
-
-    This function creates an intermediate DOCX file, converts it to PDF,
-    and then deletes the DOCX so only the PDF remains.
+      str: The path to the generated cover PDF.
     """
-    # Define the path to your cover template (adjust as needed)
+    # Define the path to your cover template DOCX
     cover_template_path = os.path.join("resources", "coverTemplate.docx")
-
-    # Define a safe output filename
+    
+    # Create a safe filename based on the participant name
     safe_name = participant_name.replace(" ", "_")
+    
+    # Define the path for the intermediate DOCX file
     output_docx_path = os.path.join(output_folder, f"{safe_name}_Cover.docx")
-
-    # Build context for the template
+    
+    # Build the context for rendering the template
     context = {
         "name": participant_name,
         "date": date,
         "cohort": cohort
     }
-
-    # Render the template and save as DOCX
+    
+    # Render the DOCX template with the context and save it
     doc = DocxTemplate(cover_template_path)
     doc.render(context)
     doc.save(output_docx_path)
     print(f"Cover DOCX saved as: {output_docx_path}")
-
-    # Convert the DOCX to PDF
-    cover_pdf = convert_docx_to_pdf_gdrive(output_docx_path, output_folder)
+    
+    # Create a proper PDF filename from the DOCX filename
+    pdf_filename = os.path.splitext(os.path.basename(output_docx_path))[0] + ".pdf"
+    output_pdf_path = os.path.join(output_folder, pdf_filename)
+    
+    # Convert the DOCX to PDF using your conversion function
+    cover_pdf = convert_docx_to_pdf_gdrive(output_docx_path, output_pdf_path)
     print(f"Cover PDF saved as: {cover_pdf}")
-
+    
     # Remove the intermediate DOCX file
     os.remove(output_docx_path)
     print(f"Intermediate DOCX file {output_docx_path} deleted.")
-
+    
     return cover_pdf
 
 
