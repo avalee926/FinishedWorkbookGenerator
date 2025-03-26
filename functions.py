@@ -11,10 +11,18 @@ import os
 import subprocess
 import pypandoc
 
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from docx import Document
+import os
+
 def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
     """
-    Converts a DOCX file to PDF using reportlab by extracting text and rendering it.
-    This is a simplified approach; for complex formatting, consider a different library.
+    Converts a DOCX file to PDF by parsing its contents with python-docx and rendering 
+    it using ReportLab's Platypus. This basic conversion handles paragraphs and tables.
+    Complex layouts (images, advanced formatting) may require further enhancements.
     """
     if output_dir is None:
         output_dir = os.path.dirname(docx_path) or "."
@@ -22,30 +30,46 @@ def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
     pdf_filename = os.path.splitext(os.path.basename(docx_path))[0] + ".pdf"
     pdf_path = os.path.join(output_dir, pdf_filename)
     
-    # Load DOCX and extract text (basic approach)
-    doc = DocxTemplate(docx_path)
-    # Since docxtpl doesn't directly extract text, we'll assume simple rendering
-    # For complex DOCX, you might need python-docx to parse, but we'll simulate here
+    # Load the DOCX using python-docx
+    document = Document(docx_path)
     
-    buffer = BytesIO()
-    c = canvas.Canvas(buffer, pagesize=letter)
-    c.setFont("Helvetica", 12)
+    # Set up the PDF document using SimpleDocTemplate with letter page size
+    pdf_doc = SimpleDocTemplate(pdf_path, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
     
-    # Placeholder: Simulate content extraction (replace with actual DOCX parsing if needed)
-    y = 750
-    c.drawString(100, y, f"Generated PDF from {os.path.basename(docx_path)}")
-    y -= 20
-    c.drawString(100, y, "Content would be rendered here.")
+    # Process all paragraphs in the DOCX
+    for para in document.paragraphs:
+        if para.text.strip():
+            story.append(Paragraph(para.text, styles['Normal']))
+            story.append(Spacer(1, 12))
     
-    c.showPage()
-    c.save()
-    buffer.seek(0)
+    # Process each table in the DOCX
+    for table in document.tables:
+        table_data = []
+        for row in table.rows:
+            row_data = []
+            for cell in row.cells:
+                # Join all paragraphs in the cell with a newline separator
+                cell_text = "\n".join(p.text for p in cell.paragraphs)
+                row_data.append(cell_text)
+            table_data.append(row_data)
+        
+        # Create a table with a basic grid style
+        t = Table(table_data)
+        t.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10)
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 12))
     
-    with open(pdf_path, "wb") as f:
-        f.write(buffer.getvalue())
-    
+    # Build the PDF
+    pdf_doc.build(story)
     print(f"PDF generated at: {pdf_path}")
     return pdf_path
+
 
 
 def is_name_match(name1, name2, threshold=80):
