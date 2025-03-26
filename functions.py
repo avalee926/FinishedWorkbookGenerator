@@ -374,6 +374,64 @@ import subprocess
 
 # Assuming SCORE_MAP and QUESTION_CATEGORIES are defined elsewhere in your module.
 # Also assuming convert_to_pdf_via_libreoffice is defined as follows:
+def fill_conflict_docs(csv_path, template_path, output_dir="."):
+    """
+    1) Reads survey responses from `csv_path`.
+    2) Converts textual answers (Rarely, Sometimes, etc.) to numeric scores using SCORE_MAP.
+    3) Sums scores by category (Collaborating, Avoiding, etc.) based on QUESTION_CATEGORIES.
+    4) Fills a Word template for each respondent and saves the .docx file.
+    5) Converts the saved DOCX to a PDF.
+    6) **Returns a list of participant names**.
+
+    Expects a single column "First and Last Name" in the CSV.
+    """
+    df = pd.read_csv(csv_path)
+    participant_names = []  # Store participant names
+
+    for idx, row in df.iterrows():
+        full_name = str(row["First and Last Name"]).strip()
+        if pd.isna(full_name) or full_name == "":
+            continue  # Skip empty names
+
+        participant_names.append(full_name)  # Collect valid names
+
+        # Initialize category scores
+        category_scores = {category: 0 for category in QUESTION_CATEGORIES.values()}
+
+        for question_col, category in QUESTION_CATEGORIES.items():
+            if question_col in df.columns:
+                answer_text = str(row[question_col]).strip()
+                numeric_score = SCORE_MAP.get(answer_text, 0)
+                category_scores[category] += numeric_score
+
+        # Build template context
+        context = {
+            "name": full_name,
+            "Col": category_scores["Collaborating"],
+            "Com": category_scores["Competing"],
+            "Avo": category_scores["Avoiding"],
+            "Acc": category_scores["Accommodating"],
+            "Co2": category_scores["Compromising"],
+        }
+
+        # Save DOCX
+        safe_name = full_name.replace(" ", "_")
+        output_filename = f"{safe_name}_ConflictStyle3.docx"
+        output_path = os.path.join(output_dir, output_filename)
+        doc = DocxTemplate(template_path)
+        doc.render(context)
+        doc.save(output_path)
+        print(f"Saved DOCX: {output_path}")
+
+        # Compute PDF output path by replacing .docx with .pdf
+        pdf_output_path = os.path.splitext(output_path)[0] + ".pdf"
+        pdf_output_path = convert_docx_to_pdf_gdrive(output_path, pdf_output_path)
+        print(f"Converted to PDF: {pdf_output_path}")
+
+        # Remove the intermediate DOCX after conversion
+        os.remove(output_path)
+
+    return participant_names  # Return the list of names
 
 
 def fill_conflict_docs_for_one(csv_path, template_path, output_dir, participant_name):
