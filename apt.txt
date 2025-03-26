@@ -2,3 +2,4 @@ libfreetype6-dev
 libpng-dev
 pkg-config
 libjpeg-dev
+libreoffice
