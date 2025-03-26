@@ -1,6 +1,6 @@
+pkg-config
+texlive-xetex
+libreoffice-headless
 libfreetype6-dev
 libpng-dev
-pkg-config
 libjpeg-dev
-libreoffice
-texlive-xetex

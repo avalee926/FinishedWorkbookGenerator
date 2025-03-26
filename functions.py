@@ -11,18 +11,14 @@ import os
 import subprocess
 import pypandoc
 
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from docx import Document
 import os
+import subprocess
 
 def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
     """
-    Converts a DOCX file to PDF by parsing its contents with python-docx and rendering 
-    it using ReportLab's Platypus. This basic conversion handles paragraphs and tables.
-    Complex layouts (images, advanced formatting) may require further enhancements.
+    Converts a DOCX file to PDF using LibreOffice in headless mode.
+    This version tries several command names: 'soffice', 'libreoffice-headless', and 'libreoffice'.
+    It retains the complex formatting that LibreOffice handles well.
     """
     if output_dir is None:
         output_dir = os.path.dirname(docx_path) or "."
@@ -30,46 +26,31 @@ def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
     pdf_filename = os.path.splitext(os.path.basename(docx_path))[0] + ".pdf"
     pdf_path = os.path.join(output_dir, pdf_filename)
     
-    # Load the DOCX using python-docx
-    document = Document(docx_path)
+    # List of possible command names for LibreOffice in headless mode.
+    commands_to_try = ["soffice", "libreoffice-headless", "libreoffice"]
     
-    # Set up the PDF document using SimpleDocTemplate with letter page size
-    pdf_doc = SimpleDocTemplate(pdf_path, pagesize=letter)
-    styles = getSampleStyleSheet()
-    story = []
+    for cmd in commands_to_try:
+        command = [
+            cmd,
+            "--headless",
+            "--convert-to", "pdf",
+            docx_path,
+            "--outdir", output_dir
+        ]
+        try:
+            print(f"Trying command: {cmd}")
+            subprocess.run(command, check=True)
+            if os.path.exists(pdf_path):
+                print(f"PDF successfully generated using '{cmd}'.")
+                return pdf_path
+            else:
+                print(f"Command '{cmd}' executed but PDF not found.")
+        except FileNotFoundError:
+            print(f"Command '{cmd}' not found; trying next option...")
+        except subprocess.CalledProcessError as e:
+            print(f"Command '{cmd}' failed with error: {e}; trying next option...")
     
-    # Process all paragraphs in the DOCX
-    for para in document.paragraphs:
-        if para.text.strip():
-            story.append(Paragraph(para.text, styles['Normal']))
-            story.append(Spacer(1, 12))
-    
-    # Process each table in the DOCX
-    for table in document.tables:
-        table_data = []
-        for row in table.rows:
-            row_data = []
-            for cell in row.cells:
-                # Join all paragraphs in the cell with a newline separator
-                cell_text = "\n".join(p.text for p in cell.paragraphs)
-                row_data.append(cell_text)
-            table_data.append(row_data)
-        
-        # Create a table with a basic grid style
-        t = Table(table_data)
-        t.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10)
-        ]))
-        story.append(t)
-        story.append(Spacer(1, 12))
-    
-    # Build the PDF
-    pdf_doc.build(story)
-    print(f"PDF generated at: {pdf_path}")
-    return pdf_path
-
+    raise FileNotFoundError("None of the LibreOffice commands ('soffice', 'libreoffice-headless', 'libreoffice') were found or succeeded in converting the DOCX.")
 
 
 def is_name_match(name1, name2, threshold=80):
