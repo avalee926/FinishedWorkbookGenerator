@@ -14,11 +14,18 @@ import pypandoc
 import os
 import subprocess
 
+import os
+import subprocess
+import shutil
+import pypandoc
+
 def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
     """
     Converts a DOCX file to PDF using LibreOffice in headless mode.
-    This version tries several command names: 'soffice', 'libreoffice-headless', and 'libreoffice'.
-    It retains the complex formatting that LibreOffice handles well.
+    If none of the LibreOffice commands ('soffice', 'libreoffice-headless', 'libreoffice')
+    are available or successful, falls back to using pandoc via pypandoc.
+    
+    This approach preserves complex formatting as handled by LibreOffice or pandoc.
     """
     if output_dir is None:
         output_dir = os.path.dirname(docx_path) or "."
@@ -26,7 +33,7 @@ def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
     pdf_filename = os.path.splitext(os.path.basename(docx_path))[0] + ".pdf"
     pdf_path = os.path.join(output_dir, pdf_filename)
     
-    # List of possible command names for LibreOffice in headless mode.
+    # List of possible LibreOffice commands to try.
     commands_to_try = ["soffice", "libreoffice-headless", "libreoffice"]
     
     for cmd in commands_to_try:
@@ -45,13 +52,29 @@ def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
                 return pdf_path
             else:
                 print(f"Command '{cmd}' executed but PDF not found.")
-        except FileNotFoundError:
-            print(f"Command '{cmd}' not found; trying next option...")
-        except subprocess.CalledProcessError as e:
-            print(f"Command '{cmd}' failed with error: {e}; trying next option...")
+        except (FileNotFoundError, subprocess.CalledProcessError) as e:
+            print(f"Command '{cmd}' failed: {e}. Trying next option...")
     
-    raise FileNotFoundError("None of the LibreOffice commands ('soffice', 'libreoffice-headless', 'libreoffice') were found or succeeded in converting the DOCX.")
-
+    # Fallback: try using pandoc via pypandoc.
+    if shutil.which("pandoc") is None:
+        print("Pandoc is not available in the system PATH.")
+    else:
+        print("Pandoc found in system PATH.")
+    
+    print("Attempting conversion with pypandoc fallback...")
+    try:
+        # This call will download pandoc if not already available,
+        # but we recommend installing pandoc via apt.txt.
+        pypandoc.download_pandoc()
+        pypandoc.convert_file(docx_path, 'pdf', outputfile=pdf_path)
+        if os.path.exists(pdf_path):
+            print("Pandoc conversion succeeded.")
+            return pdf_path
+        else:
+            raise FileNotFoundError("Pandoc conversion did not produce a PDF.")
+    except Exception as e:
+        print("Pandoc conversion failed:", e)
+        raise FileNotFoundError("Neither LibreOffice nor pandoc could convert the DOCX to PDF.")
 
 def is_name_match(name1, name2, threshold=80):
     """

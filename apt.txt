@@ -1,6 +1,7 @@
-pkg-config
-texlive-xetex
 libreoffice-headless
+pandoc
+texlive-xetex
 libfreetype6-dev
 libpng-dev
+pkg-config
 libjpeg-dev
