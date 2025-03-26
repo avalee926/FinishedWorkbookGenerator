@@ -28,8 +28,7 @@ SWEET_SPOT_TEMPLATE_DOCX = os.path.join("resources", "Sweet_Spot_Template.docx")
 
 # Create output folder if it doesn't exist
 OUTPUT_FOLDER = "output"
-if not os.path.exists(OUTPUT_FOLDER):
-    os.makedirs(OUTPUT_FOLDER)
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)  # No error if it already exists
 
 st.title("Automated Workbook Creator")
 
