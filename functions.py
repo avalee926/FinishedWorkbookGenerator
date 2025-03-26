@@ -19,30 +19,74 @@ import subprocess
 import shutil
 import pypandoc
 
-def convert_to_pdf_via_libreoffice(docx_path, output_dir=None):
+import os
+import io
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
+
+def convert_docx_to_pdf_gdrive(docx_path, output_pdf_path):
     """
-    Converts a DOCX file to PDF using unoconv.
-    Unoconv uses LibreOffice in headless mode to perform the conversion.
+    Converts a DOCX file to PDF using the Google Drive API.
+
+    Parameters:
+      docx_path (str): Local path to the input DOCX file.
+      output_pdf_path (str): Local path where the output PDF will be saved.
+
+    Returns:
+      str: The path to the converted PDF file.
     """
-    if output_dir is None:
-        output_dir = os.path.dirname(docx_path) or "."
+    # 1. Update this path to match where your JSON key is located
+    CREDENTIALS_PATH = "workbookgenerator-a89427f1f3de.json"
     
-    pdf_filename = os.path.splitext(os.path.basename(docx_path))[0] + ".pdf"
-    pdf_path = os.path.join(output_dir, pdf_filename)
+    # 2. Define the required scopes
+    SCOPES = ["https://www.googleapis.com/auth/drive"]
     
-    command = ["unoconv", "-f", "pdf", "-o", output_dir, docx_path]
+    # 3. Load credentials from the JSON key file
+    creds = service_account.Credentials.from_service_account_file(
+        CREDENTIALS_PATH, 
+        scopes=SCOPES
+    )
     
-    try:
-        print(f"Running command: {' '.join(command)}")
-        subprocess.run(command, check=True)
-        if os.path.exists(pdf_path):
-            print(f"PDF successfully generated: {pdf_path}")
-            return pdf_path
-        else:
-            raise FileNotFoundError(f"PDF not found at {pdf_path} after conversion.")
-    except Exception as e:
-        print("Unoconv conversion failed:", e)
-        raise e
+    # 4. Build the Drive API client
+    service = build('drive', 'v3', credentials=creds)
+    
+    # 5. Upload the DOCX file to Google Drive
+    file_metadata = {
+        'name': os.path.basename(docx_path)
+    }
+    media = MediaFileUpload(
+        docx_path,
+        mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+    file = service.files().create(
+        body=file_metadata, 
+        media_body=media, 
+        fields='id'
+    ).execute()
+    file_id = file.get('id')
+    print(f"Uploaded file ID: {file_id}")
+    
+    # 6. Export the file as PDF
+    request = service.files().export_media(
+        fileId=file_id,
+        mimeType='application/pdf'
+    )
+    with io.FileIO(output_pdf_path, 'wb') as fh:
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while not done:
+            status, done = downloader.next_chunk()
+            if status:
+                print(f"Download {int(status.progress() * 100)}%.")
+    
+    print(f"Converted PDF saved as: {output_pdf_path}")
+    
+    # 7. (Optional) Delete the file from Drive to clean up
+    service.files().delete(fileId=file_id).execute()
+    print("Temporary file deleted from Google Drive.")
+    
+    return output_pdf_path
 
 def is_name_match(name1, name2, threshold=80):
     """
@@ -309,7 +353,7 @@ def fill_template(parsed_strengths, strength_data, person_name, template_path, o
     print(f"Template has been filled and saved as: {output_docx_path}")
 
     # Convert the DOCX to PDF.
-    pdf_output_path = convert_to_pdf_via_libreoffice(output_docx_path)
+    pdf_output_path = convert_docx_to_pdf_gdrive(output_docx_path)
     print(f"Converted to PDF: {pdf_output_path}")
     return pdf_output_path
 
@@ -375,7 +419,7 @@ def fill_conflict_docs(csv_path, template_path, output_dir="."):
         doc.save(output_path)
 
         # Convert to PDF
-        pdf_output_path = convert_to_pdf_via_libreoffice(output_path)
+        pdf_output_path = convert_docx_to_pdf_gdrive(output_path)
         os.remove(output_path)  # Remove DOCX after conversion
 
     return participant_names  # Return the list of names
@@ -446,7 +490,7 @@ def fill_conflict_docs_for_one(csv_path, template_path, output_dir, participant_
     print(f"Saved DOCX: {output_path}")
 
     # Convert the DOCX to PDF using your helper function
-    pdf_output_path = convert_to_pdf_via_libreoffice(output_path, output_dir)
+    pdf_output_path = convert_docx_to_pdf_gdrive(output_path, output_dir)
     print(f"Converted to PDF: {pdf_output_path}")
 
     # Optionally, delete the intermediate DOCX:
@@ -632,7 +676,7 @@ def generate_cover_pdf(participant_name=None,
     print(f"Cover DOCX saved as: {output_docx_path}")
 
     # Convert the DOCX to PDF
-    cover_pdf = convert_to_pdf_via_libreoffice(output_docx_path, output_folder)
+    cover_pdf = convert_docx_to_pdf_gdrive(output_docx_path, output_folder)
     print(f"Cover PDF saved as: {cover_pdf}")
 
     # Remove the intermediate DOCX file

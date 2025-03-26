@@ -7,6 +7,14 @@ from urllib.parse import quote
 
 #Comment to update 
 
+import subprocess
+try:
+    subprocess.run(["libreoffice", "--version"], check=True)
+    print("✅ LibreOffice is installed!")
+except:
+    print("❌ LibreOffice is missing!")
+
+    
 # Import your processing functions and constants
 from functions import (
     generate_cover_pdf,

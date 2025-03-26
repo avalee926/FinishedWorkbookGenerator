@@ -16,3 +16,6 @@ numpy==1.23.5
 pypandoc==1.8.1
 python-docx==0.8.11
 reportlab==3.6.12
+google-api-python-client
+google-auth
+google-auth-httplib2
