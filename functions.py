@@ -25,36 +25,34 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 
+def get_credentials():
+    # Load credentials from Streamlit secrets
+    credentials_dict = st.secrets["google_service_account"]
+    creds = service_account.Credentials.from_service_account_info(
+        credentials_dict,
+        scopes=["https://www.googleapis.com/auth/drive"]
+    )
+    return creds
+
 def convert_docx_to_pdf_gdrive(docx_path, output_pdf_path):
     """
     Converts a DOCX file to PDF using the Google Drive API.
-
+    
     Parameters:
       docx_path (str): Local path to the input DOCX file.
       output_pdf_path (str): Local path where the output PDF will be saved.
-
+    
     Returns:
       str: The path to the converted PDF file.
     """
-    # 1. Update this path to match where your JSON key is located
-    CREDENTIALS_PATH = "workbookgenerator-a89427f1f3de.json"
+    # Load credentials using the secrets
+    creds = get_credentials()
     
-    # 2. Define the required scopes
-    SCOPES = ["https://www.googleapis.com/auth/drive"]
-    
-    # 3. Load credentials from the JSON key file
-    creds = service_account.Credentials.from_service_account_file(
-        CREDENTIALS_PATH, 
-        scopes=SCOPES
-    )
-    
-    # 4. Build the Drive API client
+    # Build the Drive API client
     service = build('drive', 'v3', credentials=creds)
     
-    # 5. Upload the DOCX file to Google Drive
-    file_metadata = {
-        'name': os.path.basename(docx_path)
-    }
+    # Upload the DOCX file to Google Drive
+    file_metadata = {'name': os.path.basename(docx_path)}
     media = MediaFileUpload(
         docx_path,
         mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -65,9 +63,9 @@ def convert_docx_to_pdf_gdrive(docx_path, output_pdf_path):
         fields='id'
     ).execute()
     file_id = file.get('id')
-    print(f"Uploaded file ID: {file_id}")
+    st.write(f"Uploaded file ID: {file_id}")
     
-    # 6. Export the file as PDF
+    # Export the file as PDF
     request = service.files().export_media(
         fileId=file_id,
         mimeType='application/pdf'
@@ -78,15 +76,16 @@ def convert_docx_to_pdf_gdrive(docx_path, output_pdf_path):
         while not done:
             status, done = downloader.next_chunk()
             if status:
-                print(f"Download {int(status.progress() * 100)}%.")
+                st.write(f"Download {int(status.progress() * 100)}%.")
     
-    print(f"Converted PDF saved as: {output_pdf_path}")
+    st.write(f"Converted PDF saved as: {output_pdf_path}")
     
-    # 7. (Optional) Delete the file from Drive to clean up
+    # Optionally, delete the file from Drive to clean up
     service.files().delete(fileId=file_id).execute()
-    print("Temporary file deleted from Google Drive.")
+    st.write("Temporary file deleted from Google Drive.")
     
     return output_pdf_path
+
 
 def is_name_match(name1, name2, threshold=80):
     """
