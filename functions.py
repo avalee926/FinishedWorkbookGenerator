@@ -22,6 +22,7 @@ import pypandoc
 
 import os
 import io
+import streamlit as st
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
@@ -37,7 +38,8 @@ def get_credentials():
 
 def convert_docx_to_pdf_gdrive(docx_path, output_pdf_path):
     """
-    Converts a DOCX file to PDF using the Google Drive API.
+    Converts a DOCX file to PDF using the Google Drive API by first converting
+    the DOCX file into a native Google Docs file (which can then be exported).
     
     Parameters:
       docx_path (str): Local path to the input DOCX file.
@@ -46,14 +48,18 @@ def convert_docx_to_pdf_gdrive(docx_path, output_pdf_path):
     Returns:
       str: The path to the converted PDF file.
     """
-    # Load credentials using the secrets
+    # Load credentials using st.secrets
     creds = get_credentials()
     
     # Build the Drive API client
     service = build('drive', 'v3', credentials=creds)
     
-    # Upload the DOCX file to Google Drive
-    file_metadata = {'name': os.path.basename(docx_path)}
+    # Upload the DOCX file and force conversion to a Google Docs file
+    file_metadata = {
+        'name': os.path.basename(docx_path),
+        # This MIME type instructs Drive to convert the file to a native Docs format.
+        'mimeType': 'application/vnd.google-apps.document'
+    }
     media = MediaFileUpload(
         docx_path,
         mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -66,7 +72,7 @@ def convert_docx_to_pdf_gdrive(docx_path, output_pdf_path):
     file_id = file.get('id')
     st.write(f"Uploaded file ID: {file_id}")
     
-    # Export the file as PDF
+    # Export the newly created Google Docs file as a PDF
     request = service.files().export_media(
         fileId=file_id,
         mimeType='application/pdf'
