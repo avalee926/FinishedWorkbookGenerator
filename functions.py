@@ -133,17 +133,17 @@ STRENGTH_DATA = {
     "Spirituality": {
         "underuse": "lack of purpose; disconnected from sacred",
         "optimal": "finding purpose; pursuing life meaning/connecting with sacred",
-        "overuse": "fanatical; preachy/rigid beliefs"
+        "overuse": "fanatical; preachy; rigid values"
     },
     "Gratitude": {
         "underuse": "entitled; unappreciative",
-        "optimal": "positive expectations; optimistic",
-        "overuse": "dependent; blind acceptance/loss of individuality"
+        "optimal": "attitude of thankfulness",
+        "overuse": "ingratiation; profuse; repetitive"
     },
     "Hope": {
-        "underuse": "apathy; pessimistic despair",
+        "underuse": "negative; pessimistic; despair",
         "optimal": "positive expectations; optimistic",
-        "overuse": "delusional positivity; ignoring problems"
+        "overuse": "blind optimism, unrealistic"
     },
     "Humor": {
         "underuse": "grim; unapproachable",
