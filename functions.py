@@ -146,109 +146,109 @@ STRENGTH_DATA = {
         "overuse": "blind optimism, unrealistic"
     },
     "Humor": {
-        "underuse": "grim; unapproachable",
-        "optimal": "healthy levity; group-oriented",
-        "overuse": "excessive teasing; belittling"
+        "underuse": "overly serious",
+        "optimal": "offering laughter to others; playful",
+        "overuse": "giddy; tasteless/offensive"
     },
     "Kindness": {
-        "underuse": "aloof; selfish",
-        "optimal": "compassion; empathy in action",
-        "overuse": "martyrdom; compassion fatigue"
+        "underuse": "indifferent; selfish; mean",
+        "optimal": "compassionate; doing for others",
+        "overuse": "intrusive; compassion-fatigue"
     },
     "Love": {
-        "underuse": "disconnected; lonely",
-        "optimal": "warmth and closeness with others",
-        "overuse": "clinging; ignoring personal boundaries"
+        "underuse": "afraid to care; not relating",
+        "optimal": "genuine, reciprocal warmth",
+        "overuse": "sugary sweet; touchy-feely"
     },
     "Bravery": {
-        "underuse": "fear-driven; easily intimidated",
-        "optimal": "standing up for beliefs; persevering through adversity",
-        "overuse": "reckless risk-taking"
+        "underuse": "cowardly; unwilling to be vulnerable",
+        "optimal": "facing fears, confronting adversity",
+        "overuse": "foolish, overconfident"
     },
     "Curiosity": {
-        "underuse": "uninterested; apathetic",
-        "optimal": "information seeking; exploration",
-        "overuse": "scattered focus; superficial dabbling"
+        "underuse": "uninterested; self-involved",
+        "optimal": "explorer; novelty-seeker; open",
+        "overuse": "nosy; self-serving"
     },
     "Love Of Learning": {
-        "underuse": "disengaged with knowledge",
-        "optimal": "intentional learning; open minded",
-        "overuse": "analysis paralysis; ignoring practicality"
+        "underuse": "complacent with knowledge",
+        "optimal": "information-seeking",
+        "overuse": "know-it-all"
     },
     "Perspective": {
-        "underuse": "unaware; limited viewpoint",
-        "optimal": "wisdom-based insight; broad perspective",
-        "overuse": "overthinking; constant re-evaluation"
+        "underuse": "shallow; superficial",
+        "optimal": "sees/offers the wider view; wise",
+        "overuse": "overbearing; arrogant"
     },
     "Creativity": {
-        "underuse": "uninspired; stuck thinking",
-        "optimal": "imaginative solutions; innovative",
-        "overuse": "unrealistic; ignoring constraints"
+        "underuse": "plain/dull; unimaginative",
+        "optimal": "original; clever; imaginative",
+        "overuse": "eccentric; odd; scattered"
     },
     "Judgment": {
-        "underuse": "uncritical acceptance; naive",
-        "optimal": "thoughtful consideration; balanced reasoning",
-        "overuse": "hypercritical; indecisive"
+        "underuse": "illogical; unreflective; closed-minded",
+        "optimal": "analytical; rational; open-minded; logical",
+        "overuse": "narrow-minded; rigid; indecisive"
     },
     "Zest": {
-        "underuse": "low energy; indifferent",
-        "optimal": "enthusiasm; active engagement",
-        "overuse": "impulsivity; burnout from overcommitment"
+        "underuse": "sedentary; passive; tired",
+        "optimal": "enthusiasm for life; happy; active",
+        "overuse": "hyper; overactive; annoying"
     },
     "Perseverance": {
-        "underuse": "easily give up; no follow-through",
-        "optimal": "steadfast pursuit of goals; resilience",
-        "overuse": "stubbornness; ignoring diminishing returns"
+        "underuse": "lazy; helpless; giving up",
+        "optimal": "persistent; overcomes all obstacles",
+        "overuse": "obsessive; stubborn"
     },
     "Honesty": {
-        "underuse": "deception; lack of authenticity",
-        "optimal": "authentic self-expression; responsibility",
-        "overuse": "bluntness; ignoring tact or empathy"
+        "underuse": "phony; dishonest; inauthentic",
+        "optimal": "authentic; truth sharer and seeker",
+        "overuse": "self-righteous; rude"
     },
     "Leadership": {
-        "underuse": "lack of direction; passive group involvement",
-        "optimal": "guiding vision; collaborative organization",
-        "overuse": "domineering; micromanagement"
+        "underuse": "compliant; follower; passive",
+        "optimal": "positively influencing others",
+        "overuse": "bossy; controlling; authoritarian"
     },
     "Teamwork": {
-        "underuse": "isolated; lacking group synergy",
-        "optimal": "cooperative effort; shared goals",
-        "overuse": "groupthink; conformity"
+        "underuse": "self-serving; individualistic",
+        "optimal": "collaborative; loyal; socially responsible;",
+        "overuse": "dependent; blind obedience; loss of individuality"
     },
     "Fairness": {
         "underuse": "bias; partial treatment",
         "optimal": "equitable decisions; impartial justice",
-        "overuse": "inflexible adherence to rules over context"
+        "overuse": "indecisive on justice issues"
     },
     "Forgiveness": {
-        "underuse": "resentful; vengeful",
-        "optimal": "letting go of grudges; understanding",
-        "overuse": "enabling repeated harm; ignoring boundaries"
+        "underuse": "merciless; vengeful",
+        "optimal": "letting go of hurt when wronged",
+        "overuse": "permissive; too lenient or soft"
     },
     "Humility": {
-        "underuse": "arrogance; self-centeredness",
-        "optimal": "accurate self-view; respectful of others",
-        "overuse": "self-effacing; inability to accept credit"
+        "underuse": "arrogant; self-focused",
+        "optimal": "others-focused; modest",
+        "overuse": "limited self-image; subservient"
     },
     "Prudence": {
-        "underuse": "impulsive; risky decisions",
-        "optimal": "thoughtful planning; caution",
-        "overuse": "overly cautious; fear of risk"
+        "underuse": "reckless; acting before thinking",
+        "optimal": "wisely cautious; planful",
+        "overuse": "stuffy; rigid"
     },
     "Self-Regulation": {
-        "underuse": "indulgent; lacking discipline",
-        "optimal": "balanced habits; emotional control",
-        "overuse": "rigidity; denying basic needs"
+        "underuse": "self-indulgent; undisciplined",
+        "optimal": "self-manager of vices",
+        "overuse": "inhibited; tightly wound"
     },
     "Appreciation Of Beauty & Excellence": {
-        "underuse": "oblivious; uninterested in excellence",
-        "optimal": "valuing artistry, skill, or beauty",
-        "overuse": "hyperfocus on perfection; aesthetic snobbery"
+        "underuse": "oblivious; mindlessness",
+        "optimal": "seeing the life behind things; awe/wonder in presence of beauty",
+        "overuse": "snobbery or perfectionistic; unrelenting standards"
     },
     "Social Intelligence": {
-        "underuse": "clueless about social cues; insensitive",
-        "optimal": "aware of social dynamics; empathetic communication",
-        "overuse": "manipulative; overthinking interactions"
+        "underuse": "clueless; insensitive",
+        "optimal": "empathic; tuned in, then savvy",
+        "overuse": "empathic; tuned in, then savvy"
     }
 }
 
