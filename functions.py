@@ -248,7 +248,7 @@ STRENGTH_DATA = {
     "Social Intelligence": {
         "underuse": "clueless; insensitive",
         "optimal": "empathic; tuned in, then savvy",
-        "overuse": "empathic; tuned in, then savvy"
+        "overuse": "over-analytical; overly sensitive"
     }
 }
 
