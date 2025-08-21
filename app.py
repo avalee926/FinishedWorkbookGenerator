@@ -297,11 +297,6 @@ elif mode == "VIA → Spreadsheet":
     st.caption("Upload a folder’s worth of VIA PDFs and get a copy-paste block ready for Google Sheets.")
     via_files = st.file_uploader("Upload VIA Files (PDFs)", type=["pdf"], accept_multiple_files=True)
 
-        # Reset button clears state
-    if st.button("Reset"):
-        st.session_state.clear()
-        st.experimental_rerun()
-
 
     if st.button("Extract to Table"):
         if not via_files:
