@@ -293,10 +293,12 @@ elif mode == "Batch":
             st.error("Please provide all required inputs and files for batch processing.")
 
 
+import pyperclip
+
 elif mode == "VIA → Spreadsheet":
     st.header("VIA → Spreadsheet")
     st.caption("Upload a folder’s worth of VIA PDFs and get a copy-paste block ready for Google Sheets.")
-    
+
     # Reset button clears state
     if st.button("Reset"):
         st.session_state.clear()
@@ -314,41 +316,33 @@ elif mode == "VIA → Spreadsheet":
                 tmp_path = os.path.join(OUTPUT_FOLDER, f.name)
                 with open(tmp_path, "wb") as out:
                     out.write(f.read())
-
                 try:
                     person_name, results = parse_via_pdf(tmp_path)
                     first, last = split_first_last(person_name)
-                    strengths = strengths_to_row(results, top_n=24)  # always 24
+                    strengths = strengths_to_row(results, top_n=24)
                     rows.append([first, last] + strengths)
                 except Exception as e:
                     failed.append((f.name, str(e)))
 
-            # Build DataFrame (with headers for display/download)
+            # Build DataFrame
             columns = ["First Name", "Last Name"] + [f"Strength {i}" for i in range(1, 25)]
             df = pd.DataFrame(rows, columns=columns)
 
             st.success("Extraction complete.")
             st.dataframe(df, use_container_width=True)
 
-            # ✅ TSV text with NO headers
+            # ✅ TSV (no header row)
             tsv_text_no_header = df.to_csv(index=False, sep="\t", header=False)
 
-            # ✅ Copy button (JS injection)
-            copy_code = f"""
-            <script>
-            function copyToClipboard() {{
-                navigator.clipboard.writeText(`{tsv_text_no_header}`);
-                var msg = document.getElementById("copy-msg");
-                msg.style.display = "block";
-                setTimeout(() => msg.style.display = "none", 2000);
-            }}
-            </script>
-            <button onclick="copyToClipboard()">Copy to Clipboard</button>
-            <p id="copy-msg" style="display:none;color:green;">Copied to clipboard!</p>
-            """
-            st.markdown(copy_code, unsafe_allow_html=True)
+            # ✅ Show text in a copyable text_area
+            st.text_area("Copy-Paste (Google Sheets Ready — no headers)", tsv_text_no_header, height=200)
 
-            # ✅ Download CSV (with headers for backup)
+            # ✅ Add copy button
+            if st.button("Copy to Clipboard"):
+                pyperclip.copy(tsv_text_no_header)
+                st.success("Copied to clipboard!")
+
+            # ✅ Download CSV with headers
             csv_text = df.to_csv(index=False)
             st.download_button(
                 "Download as CSV (with headers)",
@@ -357,7 +351,6 @@ elif mode == "VIA → Spreadsheet":
                 mime="text/csv",
             )
 
-            # Any failures?
             if failed:
                 st.warning("Some files could not be parsed:")
                 for fname, err in failed:
