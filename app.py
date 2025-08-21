@@ -295,9 +295,8 @@ elif mode == "Batch":
 
 elif mode == "VIA → Spreadsheet":
     st.header("VIA → Spreadsheet")
-    st.caption("Upload a folder’s worth of VIA PDFs and get a copy-paste CSV for your sheet.")
+    st.caption("Upload a folder’s worth of VIA PDFs and get a copy-paste block ready for Google Sheets.")
     via_files = st.file_uploader("Upload VIA Files (PDFs)", type=["pdf"], accept_multiple_files=True)
-    top_n = st.number_input("How many strengths per person?", min_value=1, max_value=24, value=24, step=1)
 
     if st.button("Extract to Table"):
         if not via_files:
@@ -315,26 +314,27 @@ elif mode == "VIA → Spreadsheet":
                 try:
                     person_name, results = parse_via_pdf(tmp_path)
                     first, last = split_first_last(person_name)
-                    strengths = strengths_to_row(results, top_n=top_n)
+                    strengths = strengths_to_row(results, top_n=24)  # always 24
                     rows.append([first, last] + strengths)
                 except Exception as e:
                     failed.append((f.name, str(e)))
 
-            columns = ["First Name", "Last Name"] + [f"Strength {i}" for i in range(1, top_n + 1)]
+            # Build DataFrame (with headers for display / download)
+            columns = ["First Name", "Last Name"] + [f"Strength {i}" for i in range(1, 25)]
             df = pd.DataFrame(rows, columns=columns)
 
             st.success("Extraction complete.")
             st.dataframe(df, use_container_width=True)
 
-            # Copy-paste TSV (Google Sheets friendly)
-            tsv_text = df.to_csv(index=False, sep="\t")
-            st.markdown("**Copy-Paste (Google Sheets Ready)**")
-            st.code(tsv_text, language="text")
+            # ✅ Copy-paste block (NO headers, tab-delimited)
+            tsv_text_no_header = df.to_csv(index=False, sep="\t", header=False)
+            st.markdown("**Copy-Paste (Google Sheets Ready — no headers):**")
+            st.code(tsv_text_no_header, language="text")
 
-            # Also allow CSV download for other tools
+            # ✅ Download CSV (keeps headers for safer record-keeping)
             csv_text = df.to_csv(index=False)
             st.download_button(
-                "Download as CSV",
+                "Download as CSV (with headers)",
                 data=csv_text.encode("utf-8"),
                 file_name="via_strengths_export.csv",
                 mime="text/csv",
