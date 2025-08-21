@@ -27,6 +27,66 @@ from functions import (
     STRENGTH_DATA
 )
 
+def normalize_spaces(s: str) -> str:
+    return " ".join(s.split())
+
+def split_first_last(person_name: str):
+    """
+    Split a full name into (first_name, last_name) for spreadsheet export.
+
+    Heuristics:
+    - Handles 'Last, First Middle' -> ('First', 'Last')
+    - Handles suffixes (e.g., Jr., Sr., II, III) by dropping them from the tail
+    - If no last name present, last_name = '' (keeps it safe for spreadsheets)
+    """
+    if not person_name:
+        return "", ""
+
+    name = normalize_spaces(person_name)
+
+    # Remove 'VIA' artifacts just in case (defensive; parse_via_pdf already strips)
+    name = name.replace("VIA Character Strengths Profile", "").strip()
+
+    # Common suffixes to ignore at the end
+    suffixes = {"Jr", "Jr.", "Sr", "Sr.", "II", "III", "IV", "V"}
+
+    if "," in name:
+        # Format: "Last, First Middle ..."
+        last, first_part = [normalize_spaces(x) for x in name.split(",", 1)]
+        first_tokens = first_part.split()
+        if first_tokens and first_tokens[-1] in suffixes:
+            first_tokens = first_tokens[:-1]
+        first = first_tokens[0] if first_tokens else ""
+        last_tokens = last.split()
+        if last_tokens and last_tokens[-1] in suffixes:
+            last_tokens = last_tokens[:-1]
+        last = " ".join(last_tokens)
+        return first, last
+
+    # Format: "First Middle Last [Suffix]"
+    tokens = name.split()
+    if tokens and tokens[-1] in suffixes:
+        tokens = tokens[:-1]
+
+    if len(tokens) == 1:
+        return tokens[0], ""
+    else:
+        # First token is first name, everything after the first token collapsed into last name
+        first = tokens[0]
+        last = " ".join(tokens[1:])
+        return first, last
+
+def strengths_to_row(results, top_n=24):
+    """Convert parse_via_pdf results -> list of strength names ordered by rank, clipped/padded to top_n."""
+    strengths = [s for (_, s) in sorted(results, key=lambda x: x[0])]
+    strengths = strengths[:top_n]
+    if len(strengths) < top_n:
+        strengths += [""] * (top_n - len(strengths))
+    return strengths
+
+
+
+
 # Define resource paths
 BIG_TEMPLATE_PDF = os.path.join("resources", "bigTemplate.pdf")
 TEAM_TEMPLATE_PDF = os.path.join("resources", "teamTemplate.pdf")
@@ -41,7 +101,7 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)  # No error if it already exists
 st.title("Automated Workbook Creator")
 
 # Sidebar: choose mode and template
-mode = st.sidebar.radio("Select Mode", ["Individual", "Batch"])
+mode = st.sidebar.radio("Select Mode", ["Individual", "Batch", "VIA → Spreadsheet"])
 template_version = st.sidebar.selectbox("Select Template", ["Open", "Team", "Tiny"])
 
 if template_version == "Open":
@@ -231,3 +291,57 @@ elif mode == "Batch":
             st.download_button("Download All Workbooks as ZIP", zip_buffer.getvalue(), file_name="workbooks.zip", mime="application/zip")
         else:
             st.error("Please provide all required inputs and files for batch processing.")
+
+
+elif mode == "VIA → Spreadsheet":
+    st.header("VIA → Spreadsheet")
+    st.caption("Upload a folder’s worth of VIA PDFs and get a copy-paste CSV for your sheet.")
+    via_files = st.file_uploader("Upload VIA Files (PDFs)", type=["pdf"], accept_multiple_files=True)
+    top_n = st.number_input("How many strengths per person?", min_value=1, max_value=24, value=24, step=1)
+
+    if st.button("Extract to Table"):
+        if not via_files:
+            st.error("Please upload at least one VIA PDF.")
+        else:
+            rows = []
+            failed = []
+
+            for f in via_files:
+                # Save temporarily (parse_via_pdf expects a path)
+                tmp_path = os.path.join(OUTPUT_FOLDER, f.name)
+                with open(tmp_path, "wb") as out:
+                    out.write(f.read())
+
+                try:
+                    person_name, results = parse_via_pdf(tmp_path)
+                    first, last = split_first_last(person_name)
+                    strengths = strengths_to_row(results, top_n=top_n)
+                    rows.append([first, last] + strengths)
+                except Exception as e:
+                    failed.append((f.name, str(e)))
+
+            columns = ["First Name", "Last Name"] + [f"Strength {i}" for i in range(1, top_n + 1)]
+            df = pd.DataFrame(rows, columns=columns)
+
+            st.success("Extraction complete.")
+            st.dataframe(df, use_container_width=True)
+
+            # Copy-paste TSV (Google Sheets friendly)
+            tsv_text = df.to_csv(index=False, sep="\t")
+            st.markdown("**Copy-Paste (Google Sheets Ready)**")
+            st.code(tsv_text, language="text")
+
+            # Also allow CSV download for other tools
+            csv_text = df.to_csv(index=False)
+            st.download_button(
+                "Download as CSV",
+                data=csv_text.encode("utf-8"),
+                file_name="via_strengths_export.csv",
+                mime="text/csv",
+            )
+
+            # Any failures?
+            if failed:
+                st.warning("Some files could not be parsed:")
+                for fname, err in failed:
+                    st.write(f"- {fname}: {err}")
