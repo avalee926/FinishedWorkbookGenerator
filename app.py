@@ -292,57 +292,51 @@ elif mode == "Batch":
         else:
             st.error("Please provide all required inputs and files for batch processing.")
 
-
-import pyperclip
-
 elif mode == "VIA → Spreadsheet":
     st.header("VIA → Spreadsheet")
     st.caption("Upload a folder’s worth of VIA PDFs and get a copy-paste block ready for Google Sheets.")
+    via_files = st.file_uploader("Upload VIA Files (PDFs)", type=["pdf"], accept_multiple_files=True)
 
-    # Reset button clears state
+        # Reset button clears state
     if st.button("Reset"):
         st.session_state.clear()
         st.experimental_rerun()
 
-    via_files = st.file_uploader("Upload VIA Files (PDFs)", type=["pdf"], accept_multiple_files=True, key="via_upload")
 
     if st.button("Extract to Table"):
         if not via_files:
             st.error("Please upload at least one VIA PDF.")
         else:
-            rows, failed = [], []
+            rows = []
+            failed = []
 
             for f in via_files:
+                # Save temporarily (parse_via_pdf expects a path)
                 tmp_path = os.path.join(OUTPUT_FOLDER, f.name)
                 with open(tmp_path, "wb") as out:
                     out.write(f.read())
+
                 try:
                     person_name, results = parse_via_pdf(tmp_path)
                     first, last = split_first_last(person_name)
-                    strengths = strengths_to_row(results, top_n=24)
+                    strengths = strengths_to_row(results, top_n=24)  # always 24
                     rows.append([first, last] + strengths)
                 except Exception as e:
                     failed.append((f.name, str(e)))
 
-            # Build DataFrame
+            # Build DataFrame (with headers for display / download)
             columns = ["First Name", "Last Name"] + [f"Strength {i}" for i in range(1, 25)]
             df = pd.DataFrame(rows, columns=columns)
 
             st.success("Extraction complete.")
             st.dataframe(df, use_container_width=True)
 
-            # ✅ TSV (no header row)
+            # ✅ Copy-paste block (NO headers, tab-delimited)
             tsv_text_no_header = df.to_csv(index=False, sep="\t", header=False)
+            st.markdown("**Copy-Paste (Google Sheets Ready — no headers):**")
+            st.code(tsv_text_no_header, language="text")
 
-            # ✅ Show text in a copyable text_area
-            st.text_area("Copy-Paste (Google Sheets Ready — no headers)", tsv_text_no_header, height=200)
-
-            # ✅ Add copy button
-            if st.button("Copy to Clipboard"):
-                pyperclip.copy(tsv_text_no_header)
-                st.success("Copied to clipboard!")
-
-            # ✅ Download CSV with headers
+            # ✅ Download CSV (keeps headers for safer record-keeping)
             csv_text = df.to_csv(index=False)
             st.download_button(
                 "Download as CSV (with headers)",
@@ -351,6 +345,7 @@ elif mode == "VIA → Spreadsheet":
                 mime="text/csv",
             )
 
+            # Any failures?
             if failed:
                 st.warning("Some files could not be parsed:")
                 for fname, err in failed:
