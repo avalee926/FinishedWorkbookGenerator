@@ -296,17 +296,21 @@ elif mode == "Batch":
 elif mode == "VIA → Spreadsheet":
     st.header("VIA → Spreadsheet")
     st.caption("Upload a folder’s worth of VIA PDFs and get a copy-paste block ready for Google Sheets.")
-    via_files = st.file_uploader("Upload VIA Files (PDFs)", type=["pdf"], accept_multiple_files=True)
+    
+    # Reset button clears state
+    if st.button("Reset"):
+        st.session_state.clear()
+        st.experimental_rerun()
+
+    via_files = st.file_uploader("Upload VIA Files (PDFs)", type=["pdf"], accept_multiple_files=True, key="via_upload")
 
     if st.button("Extract to Table"):
         if not via_files:
             st.error("Please upload at least one VIA PDF.")
         else:
-            rows = []
-            failed = []
+            rows, failed = [], []
 
             for f in via_files:
-                # Save temporarily (parse_via_pdf expects a path)
                 tmp_path = os.path.join(OUTPUT_FOLDER, f.name)
                 with open(tmp_path, "wb") as out:
                     out.write(f.read())
@@ -319,19 +323,32 @@ elif mode == "VIA → Spreadsheet":
                 except Exception as e:
                     failed.append((f.name, str(e)))
 
-            # Build DataFrame (with headers for display / download)
+            # Build DataFrame (with headers for display/download)
             columns = ["First Name", "Last Name"] + [f"Strength {i}" for i in range(1, 25)]
             df = pd.DataFrame(rows, columns=columns)
 
             st.success("Extraction complete.")
             st.dataframe(df, use_container_width=True)
 
-            # ✅ Copy-paste block (NO headers, tab-delimited)
+            # ✅ TSV text with NO headers
             tsv_text_no_header = df.to_csv(index=False, sep="\t", header=False)
-            st.markdown("**Copy-Paste (Google Sheets Ready — no headers):**")
-            st.code(tsv_text_no_header, language="text")
 
-            # ✅ Download CSV (keeps headers for safer record-keeping)
+            # ✅ Copy button (JS injection)
+            copy_code = f"""
+            <script>
+            function copyToClipboard() {{
+                navigator.clipboard.writeText(`{tsv_text_no_header}`);
+                var msg = document.getElementById("copy-msg");
+                msg.style.display = "block";
+                setTimeout(() => msg.style.display = "none", 2000);
+            }}
+            </script>
+            <button onclick="copyToClipboard()">Copy to Clipboard</button>
+            <p id="copy-msg" style="display:none;color:green;">Copied to clipboard!</p>
+            """
+            st.markdown(copy_code, unsafe_allow_html=True)
+
+            # ✅ Download CSV (with headers for backup)
             csv_text = df.to_csv(index=False)
             st.download_button(
                 "Download as CSV (with headers)",
