@@ -459,7 +459,7 @@ def fill_conflict_docs_for_one(csv_path, template_path, output_dir, participant_
     filtered_df = df[df["First and Last Name"].map(clean) == clean(participant_name)]
 
     # Filter for the specified participant
-    filtered_df = df[df["First and Last Name"] == participant_name]
+
     if filtered_df.empty:
         print(f"No responses found for {participant_name} in {csv_path}")
         return
@@ -548,7 +548,8 @@ def merge_custom_pages_by_index(
     cover_reader    = PdfReader(cover_pdf)
     via_reader      = PdfReader(via_pdf)
     sweet_reader    = PdfReader(sweet_pdf)
-    conflict_reader = PdfReader(conflict_pdf)
+    conflict_reader = PdfReader(conflict_pdf) if conflict_pdf else None
+
 
     # Loop through every page in the template
     for i in range(len(template_reader.pages)):
@@ -565,12 +566,11 @@ def merge_custom_pages_by_index(
             for sp in sweet_reader.pages:
                 writer.add_page(sp)
         elif i == 11:
-            # Insert all pages from conflict_pdf
-            for cr in conflict_reader.pages:
-                writer.add_page(cr)
-        else:
-            # Keep the original page from the template
-            writer.add_page(template_reader.pages[i])
+            if conflict_reader:
+                for cr in conflict_reader.pages:
+                    writer.add_page(cr)
+            else:
+                writer.add_page(template_reader.pages[i])  # keep template page
 
     # Write out the merged PDF
     with open(output_pdf, "wb") as out:
