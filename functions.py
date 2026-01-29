@@ -285,7 +285,7 @@ def parse_via_pdf(pdf_path):
         # Replace multiple whitespace characters with a single space
         person_name = re.sub(r'\s+', ' ', person_name)
     else:
-        person_name = "Unknown"
+        person_name = "Catherine Soltys"
     # Extract strengths (e.g., "1. Humor")
     pattern = re.compile(r"(\d+)\.\s+(.+)")
     matches = pattern.findall(full_text)
