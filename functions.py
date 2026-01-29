@@ -569,8 +569,8 @@ def merge_custom_pages_by_index(
             if conflict_reader:
                 for cr in conflict_reader.pages:
                     writer.add_page(cr)
-            else:
-                writer.add_page(template_reader.pages[i])  # keep template page
+        else:
+            writer.add_page(template_reader.pages[i])  # keep template page
 
     # Write out the merged PDF
     with open(output_pdf, "wb") as out:
