@@ -451,6 +451,13 @@ def fill_conflict_docs_for_one(csv_path, template_path, output_dir, participant_
     # Read the CSV into a DataFrame
     df = pd.read_csv(csv_path)
 
+
+    def clean(s):
+        return " ".join(str(s).split())
+
+
+    filtered_df = df[df["First and Last Name"].map(clean) == clean(participant_name)]
+
     # Filter for the specified participant
     filtered_df = df[df["First and Last Name"] == participant_name]
     if filtered_df.empty:
