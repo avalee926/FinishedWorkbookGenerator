@@ -142,8 +142,9 @@ if mode == "Individual":
                 f.write(conflict_csv.read())
             
             # 1. Generate Cover Page
-            cover_pdf = generate_cover_pdf(participant_name, term, cohort, OUTPUT_FOLDER)
-            
+            cover_pdf = cover_pdf = generate_cover_pdf(participant_name,term,cohort,OUTPUT_FOLDER,lab_type=lab_type)
+
+        
             # 2. Parse VIA Survey
             parsed_name, results = parse_via_pdf(via_filepath)
             final_name = participant_name  # or use parsed_name if needed
@@ -244,7 +245,7 @@ elif mode == "Batch":
                     continue
                 
                 # Generate cover page
-                cover_pdf = generate_cover_pdf(csv_name, term, cohort, OUTPUT_FOLDER)
+                cover_pdf = generate_cover_pdf(csv_name,term,cohort,OUTPUT_FOLDER,lab_type=lab_type)
                 
                 # Parse VIA PDF
                 parsed_name, results = parse_via_pdf(via_filepath)
