@@ -93,6 +93,8 @@ TEAM_TEMPLATE_PDF = os.path.join("resources", "teamTemplate.pdf")
 TINY_TEMPLATE_PDF = os.path.join("resources", "tinyTemplate.pdf")
 CONFLICT_TEMPLATE_DOCX = os.path.join("resources", "Conflict_Template.docx")
 SWEET_SPOT_TEMPLATE_DOCX = os.path.join("resources", "Sweet_Spot_Template.docx")
+COVER_TEMPLATE_DOCX = os.path.join("resources", "coverTemplate.docx")
+NAIS_TEMPLATE_DOCX  = os.path.join("resources", "NAISTemplate.docx")
 
 # Create output folder if it doesn't exist
 OUTPUT_FOLDER = "output"
@@ -103,6 +105,13 @@ st.title("Automated Workbook Creator")
 # Sidebar: choose mode and template
 mode = st.sidebar.radio("Select Mode", ["Individual", "Batch", "VIA → Spreadsheet"])
 template_version = st.sidebar.selectbox("Select Template", ["Open", "Team", "Tiny"])
+
+lab_type = st.sidebar.radio(
+    "Select Lab Type",
+    ["Connection Lab", "Leadership Lab"],
+    index=0
+)
+
 
 if template_version == "Open":
     template_pdf = BIG_TEMPLATE_PDF
