@@ -390,6 +390,8 @@ def fill_conflict_docs(csv_path, template_path, output_dir="."):
 
     for idx, row in df.iterrows():
         full_name = str(row["First and Last Name"]).strip()
+        if full_name == "Heather  Griffin":
+            full_name = "Heather Griffin"
         if pd.isna(full_name) or full_name == "":
             continue  # Skip empty names
 
