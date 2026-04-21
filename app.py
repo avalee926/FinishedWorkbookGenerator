@@ -20,12 +20,12 @@ from functions import (
     generate_cover_pdf,
     parse_via_pdf,
     fill_template,
+    fill_conflict_docs,
     fill_conflict_docs_for_one,
     merge_custom_pages_by_index,
     paginate_pdf,
     is_name_match,
-    STRENGTH_DATA,
-    process_via_survey
+    STRENGTH_DATA
 )
 
 def normalize_spaces(s: str) -> str:
@@ -106,7 +106,7 @@ st.title("Automated Workbook Creator")
 # Sidebar: choose mode and template
 mode = st.sidebar.radio(
     "Select Mode",
-    ["Individual", "Batch", "VIA → Spreadsheet", "VIA → Sweet Spot"])
+    ["Individual", "Batch", "VIA → Spreadsheet", "VIA → Sweet Spot", "Conflict Report → Conflict Style"])
 template_version = st.sidebar.selectbox("Select Template", ["Open", "Team", "Tiny"])
 
 lab_type = st.sidebar.radio(
@@ -431,3 +431,73 @@ elif mode == "VIA → Sweet Spot":
                 st.warning("Some files could not be processed:")
                 for fname, err in failed:
                     st.write(f"- {fname}: {err}")
+
+
+elif mode == "Conflict Report → Conflict Style":
+    st.header("Conflict Report → Conflict Style")
+    st.caption("Upload a conflict results spreadsheet and generate the one-page conflict style sheet(s).")
+
+    conflict_csv = st.file_uploader(
+        "Upload Conflict CSV File",
+        type=["csv"],
+        key="conflict_style_csv"
+    )
+
+    if st.button("Generate Conflict Style Sheets"):
+        if conflict_csv is None:
+            st.error("Please upload a conflict CSV file.")
+        else:
+            try:
+                # Save uploaded CSV
+                conflict_csv_path = os.path.join(OUTPUT_FOLDER, conflict_csv.name)
+                with open(conflict_csv_path, "wb") as f:
+                    f.write(conflict_csv.read())
+
+                # Generate all conflict style PDFs
+                participant_names = fill_conflict_docs(
+                    csv_path=conflict_csv_path,
+                    template_path=CONFLICT_TEMPLATE_DOCX,
+                    output_dir=OUTPUT_FOLDER
+                )
+
+                # Rebuild expected PDF file paths
+                generated_files = []
+                for name in participant_names:
+                    safe_name = name.replace(" ", "_")
+                    pdf_path = os.path.join(OUTPUT_FOLDER, f"{safe_name}_ConflictStyle3.pdf")
+                    if os.path.exists(pdf_path):
+                        generated_files.append(pdf_path)
+
+                if not generated_files:
+                    st.error("No conflict style sheets were generated.")
+                elif len(generated_files) == 1:
+                    st.success("Generated 1 conflict style sheet.")
+                    with open(generated_files[0], "rb") as f:
+                        st.download_button(
+                            "Download Conflict Style PDF",
+                            f.read(),
+                            file_name=os.path.basename(generated_files[0]),
+                            mime="application/pdf",
+                        )
+                else:
+                    st.success(f"Generated {len(generated_files)} conflict style sheets.")
+
+                    zip_buffer = BytesIO()
+                    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                        for file_path in generated_files:
+                            zip_file.write(file_path, arcname=os.path.basename(file_path))
+                    zip_buffer.seek(0)
+
+                    st.download_button(
+                        "Download All Conflict Style PDFs as ZIP",
+                        zip_buffer.getvalue(),
+                        file_name="conflict_style_sheets.zip",
+                        mime="application/zip",
+                    )
+
+                    st.markdown("**Generated for:**")
+                    for name in participant_names:
+                        st.markdown(f"- {name}")
+
+            except Exception as e:
+                st.error(f"Error generating conflict style sheets: {e}")
