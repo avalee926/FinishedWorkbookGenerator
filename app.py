@@ -464,7 +464,7 @@ elif mode == "Conflict Report → Conflict Style":
                 generated_files = []
                 for name in participant_names:
                     safe_name = name.replace(" ", "_")
-                    pdf_path = os.path.join(OUTPUT_FOLDER, f"{safe_name}_ConflictStyle3.pdf")
+                    pdf_path = os.path.join(OUTPUT_FOLDER, f"{safe_name}_ConflictStyle.pdf")
                     if os.path.exists(pdf_path):
                         generated_files.append(pdf_path)
 
