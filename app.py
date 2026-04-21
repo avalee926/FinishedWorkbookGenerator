@@ -24,7 +24,8 @@ from functions import (
     merge_custom_pages_by_index,
     paginate_pdf,
     is_name_match,
-    STRENGTH_DATA
+    STRENGTH_DATA,
+    process_via_survey
 )
 
 def normalize_spaces(s: str) -> str:
@@ -103,8 +104,10 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)  # No error if it already exists
 st.title("Automated Workbook Creator")
 
 # Sidebar: choose mode and template
-mode = st.sidebar.radio("Select Mode", ["Individual", "Batch", "VIA → Spreadsheet"])
-template_version = st.sidebar.selectbox("Select Template", ["Open", "Team", "Tiny"])
+mode = st.sidebar.radio(
+    "Select Mode",
+    ["Individual", "Batch", "VIA → Spreadsheet", "VIA → Sweet Spot"]
+)template_version = st.sidebar.selectbox("Select Template", ["Open", "Team", "Tiny"])
 
 lab_type = st.sidebar.radio(
     "Select Lab Type",
@@ -349,9 +352,82 @@ elif mode == "VIA → Spreadsheet":
                 file_name="via_strengths_export.csv",
                 mime="text/csv",
             )
+            
 
             # Any failures?
             if failed:
                 st.warning("Some files could not be parsed:")
+                for fname, err in failed:
+                    st.write(f"- {fname}: {err}")
+
+elif mode == "VIA → Sweet Spot":
+    st.header("VIA → Sweet Spot")
+    st.caption("Upload one or more VIA PDFs to generate only the Sweet Spot sheets.")
+
+    via_files = st.file_uploader(
+        "Upload VIA Files (PDFs)",
+        type=["pdf"],
+        accept_multiple_files=True,
+        key="sweetspot_via_files"
+    )
+
+    if st.button("Generate Sweet Spot Sheets"):
+        if not via_files:
+            st.error("Please upload at least one VIA PDF.")
+        else:
+            generated_files = []
+            failed = []
+
+            for via_file in via_files:
+                try:
+                    # Save uploaded PDF temporarily
+                    via_filepath = os.path.join(OUTPUT_FOLDER, via_file.name)
+                    with open(via_filepath, "wb") as f:
+                        f.write(via_file.read())
+
+                    # Use existing helper from functions.py
+                    sweet_pdf = process_via_survey(
+                        pdf_path=via_filepath,
+                        strength_data=STRENGTH_DATA,
+                        template_path=SWEET_SPOT_TEMPLATE_DOCX,
+                        output_folder=OUTPUT_FOLDER
+                    )
+
+                    generated_files.append(sweet_pdf)
+
+                except Exception as e:
+                    failed.append((via_file.name, str(e)))
+
+            if generated_files:
+                st.success(f"Generated {len(generated_files)} Sweet Spot sheet(s).")
+
+                # If only one file, offer direct download
+                if len(generated_files) == 1:
+                    file_path = generated_files[0]
+                    with open(file_path, "rb") as f:
+                        st.download_button(
+                            "Download Sweet Spot PDF",
+                            f.read(),
+                            file_name=os.path.basename(file_path),
+                            mime="application/pdf",
+                        )
+                else:
+                    # If multiple, zip them
+                    zip_buffer = BytesIO()
+                    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                        for file_path in generated_files:
+                            if os.path.exists(file_path):
+                                zip_file.write(file_path, arcname=os.path.basename(file_path))
+                    zip_buffer.seek(0)
+
+                    st.download_button(
+                        "Download All Sweet Spot PDFs as ZIP",
+                        zip_buffer.getvalue(),
+                        file_name="sweet_spot_sheets.zip",
+                        mime="application/zip",
+                    )
+
+            if failed:
+                st.warning("Some files could not be processed:")
                 for fname, err in failed:
                     st.write(f"- {fname}: {err}")
