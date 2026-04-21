@@ -25,6 +25,7 @@ from functions import (
     merge_custom_pages_by_index,
     paginate_pdf,
     is_name_match,
+    process_via_survey,
     STRENGTH_DATA
 )
 
