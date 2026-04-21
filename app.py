@@ -106,8 +106,8 @@ st.title("Automated Workbook Creator")
 # Sidebar: choose mode and template
 mode = st.sidebar.radio(
     "Select Mode",
-    ["Individual", "Batch", "VIA → Spreadsheet", "VIA → Sweet Spot"]
-)template_version = st.sidebar.selectbox("Select Template", ["Open", "Team", "Tiny"])
+    ["Individual", "Batch", "VIA → Spreadsheet", "VIA → Sweet Spot"])
+template_version = st.sidebar.selectbox("Select Template", ["Open", "Team", "Tiny"])
 
 lab_type = st.sidebar.radio(
     "Select Lab Type",
